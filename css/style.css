@@ -1,0 +1,21 @@
+body {
+	background-color: #eeeeee;
+}
+
+.accordion-header {
+	color: #1266f1;
+}
+
+.accordion-item {
+	background-color: #ffffff;
+	margin-bottom: 0.5em;
+}
+
+.accordion-button {
+	color: #1266f1;
+}
+
+.accordion-button:after {
+	color: #39c0ed;
+}
+
