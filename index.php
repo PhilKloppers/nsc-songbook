@@ -29,9 +29,24 @@
 		<!--Section: Content-->
 			<div class="accordion" id="accordionExample">
 <?php
-	$directory = 'songs-active';
-	$filelist = array_diff(scandir($directory), array('..', '.'));
-	foreach($filelist as $file) include_once($directory.'/'.$file);
+	$configFile = __DIR__ . '/config/active-songs.json';
+	$directory = 'songs-library';
+	if (file_exists($configFile)) {
+		$activeSongs = json_decode(file_get_contents($configFile), true);
+		if (is_array($activeSongs)) {
+			foreach ($activeSongs as $file) {
+				$path = $directory . '/' . $file;
+				if (file_exists($path)) {
+					include($path);
+				}
+			}
+		}
+	} else {
+		// Fallback: scan songs-active directory (legacy behaviour)
+		$directory = 'songs-active';
+		$filelist = array_diff(scandir($directory), array('..', '.'));
+		foreach ($filelist as $file) include_once($directory . '/' . $file);
+	}
 ?>
 			</div>
 		</div>
