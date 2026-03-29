@@ -1,5 +1,6 @@
+<?php require_once __DIR__ . '/includes/song-renderer.php'; ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -13,39 +14,50 @@
 	<link rel="stylesheet" href="css/mdb.min.css" />
 	<!-- Custom styles -->
 	<link rel="stylesheet" href="css/style.css" />
+	<script>(function(){var t=localStorage.getItem('nsc-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 
 <body>
 	<header>
-		<nav class="navbar navbar-dark bg-primary">
-			<div class="container-fluid justify-content-center">
+		<nav class="navbar navbar-dark">
+			<div class="container-fluid">
+				<div style="position:relative;">
+					<button class="btn btn-link text-white p-2" id="menuBtn" aria-label="Menu">
+						<i class="fas fa-bars fa-lg"></i>
+					</button>
+					<div class="theme-dropdown" id="menuDropdown">
+						<div class="menu-item">
+							<span><i class="fas fa-moon"></i> Dark Mode</span>
+							<div class="form-check form-switch mb-0">
+								<input class="form-check-input" type="checkbox" id="themeSwitch" checked>
+							</div>
+						</div>
+					</div>
+				</div>
 				<span class="navbar-brand mb-0 h1">NSC Songbook</span>
+				<span style="width:40px;"></span>
 			</div>
 		</nav>
 	</header>
+
 	<!--Main layout-->
-	<main class="my-3"">
+	<main class="my-3">
 		<div class="container">
 		<!--Section: Content-->
 			<div class="accordion" id="accordionExample">
 <?php
 	$configFile = __DIR__ . '/config/active-songs.json';
-	$directory = 'songs-library';
+	$directory = __DIR__ . '/songs-library';
 	if (file_exists($configFile)) {
 		$activeSongs = json_decode(file_get_contents($configFile), true);
 		if (is_array($activeSongs)) {
 			foreach ($activeSongs as $file) {
 				$path = $directory . '/' . $file;
 				if (file_exists($path)) {
-					include($path);
+					renderSong($path);
 				}
 			}
 		}
-	} else {
-		// Fallback: scan songs-active directory (legacy behaviour)
-		$directory = 'songs-active';
-		$filelist = array_diff(scandir($directory), array('..', '.'));
-		foreach ($filelist as $file) include_once($directory . '/' . $file);
 	}
 ?>
 			</div>
@@ -53,14 +65,18 @@
 	</main>
 	<!--Main layout-->
 
+	<!-- Font size controls -->
+	<div class="font-controls">
+		<button onclick="changeFontSize(1)" aria-label="Increase font size" title="Larger text">A+</button>
+		<button onclick="changeFontSize(-1)" aria-label="Decrease font size" title="Smaller text">A&minus;</button>
+	</div>
+
 	<!--Footer-->
-	<footer class="bg-light text-lg-start">
+	<footer>
 		<hr class="m-0" />
-		<!-- Downloadable copy -->
 		<div class="text-center py-4 align-items-center">
 			<a href="SonriseService.pdf" target="_blank"><strong>Download a printable PDF of this songbook</strong></a>
 		</div>
-		<!--Downloadable copy-->
 
 		<div class="text-center py-4 align-items-center">
 			<p>Follow NSC on social media</p>
@@ -72,14 +88,13 @@
 			</a>
 		</div>
 
-		<!-- Copyright -->
-		<div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-			© 2025 Copyright:
-			<a class="text-dark" href="https://www.nsc.za.org/">Norwegian Settlers Church</a>
+		<div class="text-center p-3" style="background-color: rgba(0,0,0,0.2);">
+			&copy; 2025 Copyright:
+			<a href="https://www.nsc.za.org/">Norwegian Settlers Church</a>
 		</div>
-		<!-- Copyright -->
 	</footer>
 	<!--Footer-->
+
 	<!-- MDB -->
 	<script type="text/javascript" src="js/mdb.min.js"></script>
 	<!-- Custom scripts -->

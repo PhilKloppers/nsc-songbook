@@ -1,14 +1,16 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+nscRequireApiAuth();
+
 header('Content-Type: application/json');
 
 $baseDir = dirname(__DIR__);
 $libraryDir = $baseDir . '/songs-library';
-$templateFile = $libraryDir . '/_template.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-	// Read song content — extract the lyrics section between the comment markers
+	// Read song content — return plain text for the editor
 	$song = isset($_GET['song']) ? basename($_GET['song']) : '';
 
 	if (!$song || !file_exists($libraryDir . '/' . $song) || $song === '_template.php') {
@@ -18,16 +20,20 @@ if ($method === 'GET') {
 	}
 
 	$content = file_get_contents($libraryDir . '/' . $song);
-	$lyrics = extractLyrics($content);
 
-	echo json_encode(['song' => $song, 'lyrics' => $lyrics]);
+	// Support legacy HTML format: convert to plain text for editor
+	if (strpos(trim($content), '<?php') === 0) {
+		$content = convertLegacyToPlainText($content);
+	}
+
+	echo json_encode(['song' => $song, 'lyrics' => $content]);
 
 } elseif ($method === 'POST') {
 	$input = json_decode(file_get_contents('php://input'), true);
 	$action = $input['action'] ?? '';
 
 	if ($action === 'save') {
-		// Save edited lyrics back into the song file
+		// Save plain-text lyrics directly to the song file
 		$song = basename($input['song'] ?? '');
 		$lyrics = $input['lyrics'] ?? '';
 
@@ -37,16 +43,7 @@ if ($method === 'GET') {
 			exit;
 		}
 
-		$content = file_get_contents($libraryDir . '/' . $song);
-		$newContent = replaceLyrics($content, $lyrics);
-
-		if ($newContent === false) {
-			http_response_code(500);
-			echo json_encode(['error' => 'Could not locate lyrics markers in song file']);
-			exit;
-		}
-
-		if (file_put_contents($libraryDir . '/' . $song, $newContent) !== false) {
+		if (file_put_contents($libraryDir . '/' . $song, $lyrics) !== false) {
 			echo json_encode(['success' => true]);
 		} else {
 			http_response_code(500);
@@ -54,7 +51,7 @@ if ($method === 'GET') {
 		}
 
 	} elseif ($action === 'create') {
-		// Create a new song from the template
+		// Create a new song with default plain-text content
 		$name = trim($input['name'] ?? '');
 
 		if (!$name) {
@@ -83,22 +80,8 @@ if ($method === 'GET') {
 			exit;
 		}
 
-		if (!file_exists($templateFile)) {
-			http_response_code(500);
-			echo json_encode(['error' => 'Template file not found']);
-			exit;
-		}
-
-		$template = file_get_contents($templateFile);
-		// Replace template placeholder lyrics with an empty verse
-		$newContent = replaceLyrics($template,
-			"\t\t\t\t\t\t<h5>Verse 1</h5>\n\t\t\t\t\t\t\t<p>\nLyrics here\n\t\t\t\t\t\t\t</p>"
-		);
-		if ($newContent === false) {
-			$newContent = $template;
-		}
-
-		if (file_put_contents($targetPath, $newContent) !== false) {
+		$defaultContent = "VERSE 1:\nLyrics here\n";
+		if (file_put_contents($targetPath, $defaultContent) !== false) {
 			echo json_encode(['success' => true, 'song' => $name]);
 		} else {
 			http_response_code(500);
@@ -133,29 +116,51 @@ if ($method === 'GET') {
 }
 
 /**
- * Extract lyrics content between the comment markers.
+ * Convert a legacy-format song file (PHP/HTML with comment markers) to plain text.
  */
-function extractLyrics($content) {
+function convertLegacyToPlainText($content) {
 	$marker = '<!-------------------------->';
 	$parts = explode($marker, $content);
-	// Structure: [before] marker [edit this section only] marker [LYRICS] marker marker marker [after]
-	// So lyrics are in $parts[3] (0-indexed) if we split by the marker
-	if (count($parts) >= 5) {
-		//return trim($parts[3]);
-		return $parts[2];
-	}
-	return '';
-}
+	if (count($parts) < 5) return '';
 
-/**
- * Replace lyrics content between the comment markers.
- */
-function replaceLyrics($content, $newLyrics) {
-	$marker = '<!-------------------------->';
-	$parts = explode($marker, $content);
-	if (count($parts) >= 6) {
-		$parts[3] = "\n" . $newLyrics . "\n\t\t\t\t\t\t";
-		return implode($marker, $parts);
+	$html = $parts[2];
+
+	// Convert headings
+	$text = preg_replace_callback('/<h5[^>]*>(.*?)<\/h5>/i', function($m) {
+		return "\n" . strtoupper(trim($m[1])) . ":\n";
+	}, $html);
+
+	// Remove paragraph tags
+	$text = preg_replace('/<\/p>/i', "\n", $text);
+	$text = preg_replace('/<p[^>]*>/i', '', $text);
+
+	// Remove br tags
+	$text = preg_replace('/<br\s*\/?>/i', '', $text);
+
+	// Remove any remaining tags
+	$text = strip_tags($text);
+
+	// Decode HTML entities
+	$text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+
+	// Clean up
+	$lines = explode("\n", $text);
+	$lines = array_map('trim', $lines);
+	while (!empty($lines) && $lines[0] === '') array_shift($lines);
+	while (!empty($lines) && end($lines) === '') array_pop($lines);
+
+	// Collapse multiple blank lines
+	$cleaned = [];
+	$prevBlank = false;
+	foreach ($lines as $line) {
+		if ($line === '') {
+			if (!$prevBlank) $cleaned[] = '';
+			$prevBlank = true;
+		} else {
+			$cleaned[] = $line;
+			$prevBlank = false;
+		}
 	}
-	return false;
+
+	return implode("\n", $cleaned) . "\n";
 }

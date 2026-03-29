@@ -1,0 +1,13 @@
+# Admin password hash
+config/.admin_password
+
+# Editor/IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,21 +1,193 @@
+/* ===== Theme Variables — dark mode is the default ===== */
+:root,
+[data-theme="dark"] {
+	--bg-body: #121212;
+	--bg-card: #1e1e1e;
+	--bg-card-hover: #2a2a2a;
+	--bg-navbar: #1a1a2e;
+	--text-primary: #e0e0e0;
+	--text-secondary: #aaa;
+	--accent: #4a9eff;
+	--accent-hover: #3a8eef;
+	--border-color: #333;
+	--footer-bg: #1a1a2e;
+	--footer-text: #ccc;
+	--link-color: #64b5f6;
+	--shadow: rgba(0,0,0,0.5);
+}
+
+[data-theme="light"] {
+	--bg-body: #f5f5f5;
+	--bg-card: #ffffff;
+	--bg-card-hover: #f0f0f0;
+	--bg-navbar: #1266f1;
+	--text-primary: #333;
+	--text-secondary: #666;
+	--accent: #1266f1;
+	--accent-hover: #0d5bdb;
+	--border-color: #dee2e6;
+	--footer-bg: #e8e8e8;
+	--footer-text: #666;
+	--link-color: #1266f1;
+	--shadow: rgba(0,0,0,0.15);
+}
+
+/* ===== Base ===== */
 body {
-	background-color: #eeeeee;
+	background-color: var(--bg-body);
+	color: var(--text-primary);
+	transition: background-color 0.3s, color 0.3s;
 }
 
-.accordion-header {
-	color: #1266f1;
+a { color: var(--link-color); }
+
+/* ===== Navbar ===== */
+.navbar {
+	background-color: var(--bg-navbar) !important;
 }
 
+/* ===== Accordion ===== */
 .accordion-item {
-	background-color: #ffffff;
+	background-color: var(--bg-card);
+	border-color: var(--border-color);
 	margin-bottom: 0.5em;
 }
 
 .accordion-button {
-	color: #1266f1;
+	background-color: var(--bg-card);
+	color: var(--accent);
 }
 
-.accordion-button:after {
-	color: #39c0ed;
+.accordion-button:not(.collapsed) {
+	background-color: var(--bg-card-hover);
+	color: var(--accent);
+	box-shadow: none;
 }
 
+.accordion-button:focus {
+	box-shadow: none;
+	border-color: var(--border-color);
+}
+
+.accordion-button::after {
+	background-size: 1.25rem;
+}
+
+[data-theme="dark"] .accordion-button::after {
+	filter: invert(0.6) sepia(1) saturate(4) hue-rotate(190deg);
+}
+
+.accordion-body {
+	color: var(--text-primary);
+	background-color: var(--bg-card);
+}
+
+.accordion-body h5 {
+	color: var(--accent);
+	margin-top: 1em;
+	margin-bottom: 0.3em;
+	font-size: 1.05em;
+	font-weight: 600;
+}
+
+.accordion-body h5:first-child {
+	margin-top: 0;
+}
+
+.accordion-body p {
+	margin-bottom: 0.8em;
+	line-height: 1.7;
+}
+
+/* ===== Footer ===== */
+footer {
+	background-color: var(--footer-bg) !important;
+	color: var(--footer-text);
+}
+
+footer a {
+	color: var(--link-color) !important;
+}
+
+footer hr {
+	border-color: var(--border-color);
+}
+
+footer p {
+	color: var(--text-secondary);
+}
+
+footer .btn-primary {
+	background-color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* ===== Hamburger menu dropdown ===== */
+.theme-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	background: var(--bg-card);
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	padding: 8px 0;
+	min-width: 200px;
+	box-shadow: 0 4px 12px var(--shadow);
+	display: none;
+	z-index: 1050;
+}
+
+.theme-dropdown.show {
+	display: block;
+}
+
+.theme-dropdown .menu-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 16px;
+	color: var(--text-primary);
+	font-size: 0.95rem;
+	cursor: pointer;
+}
+
+.theme-dropdown .menu-item:hover {
+	background: var(--bg-card-hover);
+}
+
+/* ===== Font size controls ===== */
+.font-controls {
+	position: fixed;
+	bottom: 24px;
+	right: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	z-index: 900;
+}
+
+.font-controls button {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	border: none;
+	background: var(--accent);
+	color: #fff;
+	font-size: 1.1rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 2px 8px var(--shadow);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.2s, transform 0.1s;
+}
+
+.font-controls button:hover {
+	background: var(--accent-hover);
+	transform: scale(1.1);
+}
+
+.font-controls button:active {
+	transform: scale(0.95);
+}

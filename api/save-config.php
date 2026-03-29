@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+nscRequireApiAuth();
+
 header('Content-Type: application/json');
 
 $baseDir = dirname(__DIR__);
